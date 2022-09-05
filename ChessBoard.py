@@ -148,8 +148,10 @@ class Board():
     
 
         self.update_legal_moves() # update all the moves
+        
         if self.board[prev[0]][prev[1]] != 0: moves = self.board[prev[0]][prev[1]].legal_moves_list
         else: moves = []
+        print(moves)
         # if the new position is empty, move it there if it is in legal moves
         if self.board[pos[0]][pos[1]] == 0:
             if (pos[0], pos[1]) in moves:
@@ -319,14 +321,17 @@ class Board():
         all_moves = []
         for i in range(self.cols):
             for j in range(self.cols):
-                if self.board[i][j] != 0: # so the square is not empty
-                    self.board[i][j].set_legal_moves(self.board) # get all the moves
+                if type(self.board[i][j]) != int: # so the square is not empty
                     if self.board[i][j].color == self.turn:  # so its the right player who moves the pieces
+                        self.board[i][j].set_legal_moves(self.board) # get all the moves
+                    
                         legalmoves1 = self.board[i][j].legal_moves_list
                         killermoves1 = self.board[i][j].killable_squares
                         # checks so a move doesnt put the player into check
+                        
                         self.board[i][j].killable_squares = [move for move in killermoves1 if not self.temp_board((i,j), move)]
                         self.board[i][j].legal_moves_list = [move for move in legalmoves1 if not self.temp_board((i,j),move)]
+                    
                         all_moves.append(self.board[i][j].killable_squares)
                         all_moves.append(self.board[i][j].legal_moves_list)
 
@@ -334,18 +339,6 @@ class Board():
 
         if len(all_moves) == 0: # Checkmate if there is no legal moves
             self.checkmate = self.turn
-
-
-    def copy_board(self):
-        copyobj = Board(8,8)
-        
-        for name, attr in self.__dict__.items():
-            if hasattr(attr, 'copy') and callable(getattr(attr, 'copy')):
-                copyobj.__dict__[name] = attr.copy()
-            else:
-                copyobj.__dict__[name] = copy.deepcopy(attr)
-
-        return copyobj
 
     def temp_board(self, start, end):
         """
@@ -368,24 +361,79 @@ class Board():
         else:
             return False
         
-    
-        
-        if self.board[start[0]][start[1]] == 0:
-            return False
-            
-        self.board[start[0]][start[1]].change_pos((end[0], end[1]))
-        self.board[end[0]][end[1]] = self.board[start[0]][start[1]]
-        self.board[start[0]][start[1]] = 0
-        if self.check(self.turn, self.board):
-            return True
-        else:
-            return False
-
-
-        
-
         """
+        nBoard = self.copy()
+
+
+        if nBoard[start[0]][start[1]] != 0:
+            new = nBoard[end[0]][end[1]]
+
+            nBoard[start[0]][start[1]].change_pos((end[0], end[1]))
+            nBoard[end[0]][end[1]] = nBoard[start[0]][start[1]]
+            nBoard[start[0]][start[1]] = 0
+
+            if self.check(self.turn, nBoard):
+
+                return True
+
+
         return False
+
+
+    def copy(self):
+        copyobj = Board(8, 8)
+        for i in range(self.cols):
+            for j in range(self.rows):
+                if self.board[j][i] != 0:
+                    for name, attr in self.board[j][i].__dict__.items():
+                        if self.board[j][i].piece == "rook":
+                            if self.board[j][i].color == "b":
+                                copyobj.board[j][i] = Rook("b", [j,i], b_rook)
+                            else:
+                                copyobj.board[j][i] = Rook("w", [j,i], w_pawn)
+
+                        elif self.board[j][i].piece == "knight":
+                            if self.board[j][i].color == "b":
+                                copyobj.board[j][i] = Knight("b", [j,i], b_knight)
+                            else:
+                                copyobj.board[j][i] = Knight("w", [j,i], w_knight)
+
+                        elif self.board[j][i].piece == "bishop":
+                            if self.board[j][i].color == "b":
+                                copyobj.board[j][i] = Bishop("b", [j,i], b_bishop)
+                            else:
+                                copyobj.board[j][i] = Bishop("w", [j,i], w_bishop)
+
+                        elif self.board[j][i].piece == "queen":
+                            if self.board[j][i].color == "b":
+                                copyobj.board[j][i] = Queen("b", [j,i], b_queen)
+                            else:
+                                copyobj.board[j][i] = Queen("w", [j,i], w_queen)
+
+                        elif self.board[j][i].piece == "king":
+                            if self.board[j][i].color == "b":
+                                copyobj.board[j][i] = King("b", [j,i], b_king)
+                            else:
+                                copyobj.board[j][i] = King("w", [j,i], w_king)
+
+                        elif self.board[j][i].piece == "pawn":
+                            if self.board[j][i].color == "b":
+                                copyobj.board[j][i] = Pawn("b", [j,i], b_pawn)
+                            else:
+                                copyobj.board[j][i] = Pawn("w", [j,i], w_pawn)
+
+                        try:
+                            copyobj.board[j][i].__dict__[name] == copy.deepcopy(attr)
+                            #print("deep: ", "name: ", name, "attr: ", attr)
+
+
+
+                        except:
+                            copyobj.board[j][i].__dict__[name] = copy.copy(attr)
+                            #print("shallow: ", "name: ", name, " attr: ", attr)
+                            
+
+        return copyobj.board
 
     def move(self, start, end):
         """
