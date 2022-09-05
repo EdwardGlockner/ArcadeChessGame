@@ -382,6 +382,7 @@ class Board():
 
     def copy(self):
         copyobj = Board(8, 8)
+        #
         for i in range(self.cols):
             for j in range(self.rows):
                 if self.board[j][i] != 0:
